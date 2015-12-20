@@ -22,11 +22,11 @@ Based on [Charlotte Truchet](http://www.normalesup.org/~truchet/)'s course.
 
 ### Algorithm
 
-**Repeat** maxRestart times
-  s <- random configuration
-  tabuList <- null
-  **while** (f(s) > 0) **and** (maxIter not reached) **do**
-    V <- neighborhood(s)
-    s <- argmin(f(x), x in V **and** x not in tabuList)
-    tabuList <- (s) U update(tabuList)
-  **end while**
+**Repeat** maxRestart times  
+  &nbsp;&nbsp; s <- random configuration  
+  &nbsp;&nbsp; tabuList <- null  
+  &nbsp;&nbsp; **while** (f(s) > 0) **and** (maxIter not reached) **do**  
+  &nbsp;&nbsp;&nbsp;&nbsp; V <- neighborhood(s)  
+  &nbsp;&nbsp;&nbsp;&nbsp; s <- argmin(f(x), x in V **and** x not in tabuList)  
+  &nbsp;&nbsp;&nbsp;&nbsp; tabuList <- (s) U update(tabuList)  
+  &nbsp;&nbsp; **end while**
