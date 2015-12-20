@@ -149,7 +149,7 @@ function oneIteration(configuration, tabu) {
   }
 
   //Calculate the cost of each neighbor
-  var vCosts =  v.map(function(neigh) {
+  var vCosts = v.map(function(neigh) {
     return calculateCost(neigh);
   });
 
