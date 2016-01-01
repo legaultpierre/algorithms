@@ -13,6 +13,11 @@ var itMax = 300;
 // Number of restarts
 var maxRestart = 1000;
 
+//Stores the number of iterations
+var iterations = [];
+// Stores the number of restarts
+var restarts = [];
+
 console.log(measure(10));
 
 /*
@@ -39,7 +44,9 @@ function measure(repeatNumber) {
 
   return {
     delays: d,
-    average: average
+    average: average,
+    iterations: iterations,
+    restarts: restarts
   }
 }
 
@@ -85,8 +92,9 @@ function restart(n, maxRestart) {
 
     // The cost of the result is calculted
     cost = calculateCost(configuration);
+
     if (cost === 0) {
-      console.log('RESTARTS: ' + i + ' i.e.' + (i * itMax) + ' iterations');
+      restarts.push(i);
     }
   }
 
@@ -162,7 +170,7 @@ function runIterations(configuration, tabuList, itMax) {
     thrownTabu = updateTabuList(tabuList, tabuList.length > tabuSize);
 
     if (cost === 0) {
-      console.log('IT in', i);
+      iterations.push(i+1);
     }
   }
 

@@ -4,7 +4,7 @@
  */
 
 // Number of queens
-var n = 8;
+var n = 10;
 var tabuSize = 8;
 
 // Objective function
@@ -15,6 +15,11 @@ var itMax = 10000;
 var maxRestart = 1000;
 //number of tentatives to find a new neig
 var maxTentativeNeighbor = 10;
+
+//Stores the number of iterations
+var iterations = [];
+// Stores the number of restarts
+var restarts = [];
 
 console.log(measure(10));
 
@@ -42,7 +47,9 @@ function measure(repeatNumber) {
 
   return {
     delays: d,
-    average: average
+    average: average,
+    iterations: iterations,
+    restarts: restarts
   }
 }
 
@@ -88,6 +95,9 @@ function restart(n, maxRestart) {
     // The cost of the result is calculted
     cost = calculateCost(configuration);
 
+    if (cost === 0) {
+      restarts.push(i);
+    }
   }
 
   return configuration;
@@ -104,6 +114,10 @@ function runIterations(configuration, tabuList, itMax) {
     configuration = oneIteration(configuration, tabuList);
     // Calculate the cost of the result
     cost = calculateCost(configuration);
+
+    if (cost === 0) {
+      iterations.push(i+1);
+    }
   }
 
   return configuration;
