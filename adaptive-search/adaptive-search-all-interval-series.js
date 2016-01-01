@@ -3,7 +3,7 @@
  */
 
 // Size of the problem
-var n = 12;
+var n = 8;
 var tabuSize = 5;
 
 // Objective function
@@ -85,6 +85,9 @@ function restart(n, maxRestart) {
 
     // The cost of the result is calculted
     cost = calculateCost(configuration);
+    if (cost === 0) {
+      console.log('RESTARTS: ' + i + ' i.e.' + (i * itMax) + ' iterations');
+    }
   }
 
   if (cost !== 0) {
@@ -99,7 +102,7 @@ function restart(n, maxRestart) {
 function runIterations(configuration, tabuList, itMax) {
   var cost = calculateCost(configuration);
   var configSize = getConfigurationSize(configuration);
-  var s, iMove = -1, valMove = Infinity;
+  var s, iMove = -1, valMove = Infinity, fiCosts, thrownTabu = -1, oldValue;
 
   for (var i = 0; i < itMax && cost !== 0; i++) {
 
@@ -107,10 +110,19 @@ function runIterations(configuration, tabuList, itMax) {
     s = complementaryTabu(tabuList);
 
     // Calculates the f(i)(configuration) for each i in s
-    var fiCosts = calculateComposantCost(configuration, s);
+    fiCosts = calculateComposantCost(configuration, s);
+
+    /*=======================TRY TO IMPROVE CALCULATE ========================*/
+    // if (iMove === -1) {
+    //   fiCosts = calculateComposantCost(configuration, s);
+    // }
+    // else {
+    //   fiCosts = calculateComposantCostAlt(configuration, s, iMove, oldValue, thrownTabu, fiCosts);
+    // }
+    /*============================ END OF TRY ================================*/
 
     // Gets the index iMove of the variable that maximises its cost function
-    var maxFiCost = Math.max(...fiCosts);
+    var maxFiCost = Math.max(...fiCosts),
         fittingIndex = [];
     fiCosts.forEach(function(e, index) {
       if (maxFiCost === e){
@@ -127,10 +139,12 @@ function runIterations(configuration, tabuList, itMax) {
       clone[iMove] = e;
       return calculateCost(clone);
     });
+
     valMove = valsiMove[costsiMove.indexOf(Math.min(...costsiMove))];
 
     // Assigns the valMove value to the iMove variable
     var clone = cloneObject(configuration);
+    oldValue = configuration[iMove];
     clone[iMove] = valMove;
 
     // If it improves the cost, it is kept
@@ -145,7 +159,11 @@ function runIterations(configuration, tabuList, itMax) {
       tabuList.push(iMove);
     }
     // The tabu list is updated
-    updateTabuList(tabuList, tabuList.length > tabuSize);
+    thrownTabu = updateTabuList(tabuList, tabuList.length > tabuSize);
+
+    if (cost === 0) {
+      console.log('IT in', i);
+    }
   }
 
   return configuration;
@@ -275,6 +293,92 @@ function calculateComposantCost(configuration, s) {
 }
 
 /*
+ * Re-evaluate the cost function by composant, only for the one
+ * NOT WORKING PROPERLY FOR NOW
+ */
+function calculateComposantCostAlt(configuration, s, iMoved, oldValue, thrownTabu, ficost){
+  var configurationSize = getConfigurationSize(configuration);
+  var previousFiCost = ficost;
+  
+  var counter = 0; 
+
+  // Determine the value changed in config
+  var valImoved = configuration[iMoved];
+
+  // Determine the two old and new differences involved by the change
+  var old1 = -1, old2 = -1, new1 = -1, new2 = -1;
+  if (iMoved > 0 && iMoved < configurationSize-1) {
+    new1 = Math.abs(configuration[iMoved-1] - valImoved);
+    new2 = Math.abs(configuration[iMoved+1] - valImoved);
+    old1 = Math.abs(configuration[iMoved-1] - oldValue);
+    old2 = Math.abs(configuration[iMoved+1] - oldValue);
+  }
+  else if (iMoved === 0) {
+    new1 = Math.abs(configuration[iMoved+1] - valImoved);
+    old1 = Math.abs(configuration[iMoved+1] - oldValue);
+  }
+  else {
+    new1 = Math.abs(configuration[iMoved-1] - valImoved);
+    old1 = Math.abs(configuration[iMoved-1] - oldValue);
+  }
+
+
+  // Test if any unicity break
+  for (var i = 0; i < configurationSize; i++) {
+    if (i !== iMoved) {
+      var configI = configuration[i];
+      var iInS = s.indexOf(i) !== -1;
+
+      // Marks all previous unicity conflicts
+      if (configI === oldValue) {
+        // counter--;
+        if (iInS) {
+          previousFiCost[i]--;
+        }
+      }
+      // Marks all new unicity conflicts
+      if (configI === valImoved) {
+        counter++;
+        if (iInS) {
+          previousFiCost[i]--;
+        }
+      }
+      // Marks all difference conflicts
+      if (i < configurationSize-1) {
+        //We do not need to consider here the conflicts with iMoved
+        if (i+1 !== iMoved) {
+          var diff = Math.abs(configuration[i] - configuration[i+1]);
+          if (diff === old1 || diff === old2) {
+            // counter--;
+            if (iInS) {
+              previousFiCost[i]--;
+            }
+            if (s.indexOf(i+1) !== -1) {
+              previousFiCost[i+1]--;
+            }
+          }
+          if (diff === new1 || diff === new2) {
+            counter++;
+            if (iInS) {
+              previousFiCost[i]++;
+            }
+            if (s.indexOf(i+1) !== -1) {
+              previousFiCost[i+1]++;
+            }
+          }
+        }
+      }
+    }
+  }
+  // If an element is removed from tabu
+  if (thrownTabu !== -1) {
+    delete previousFiCost[thrownTabu];
+  }
+  previousFiCost[iMoved] = counter;
+  return previousFiCost;
+}
+
+/*
  * ===================================================
  * ====================== Utils ======================
  * ===================================================
@@ -341,7 +445,7 @@ function sameConfig(config1, config2) {
  */
 function updateTabuList(list, condition) {
   if (condition) {
-    list.splice(0,1);
+    return list.splice(0,1)[0];
   }
 }
 
